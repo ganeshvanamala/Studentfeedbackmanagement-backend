@@ -1,4 +1,4 @@
-﻿package com.example.demo.config;
+package com.example.demo.config;
 
 import com.example.demo.model.Faculty;
 import com.example.demo.model.Role;
@@ -33,6 +33,8 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        seedAdminUser();
+
         Map<String, String> departments = new LinkedHashMap<>();
         departments.put("cse", "CSE");
         departments.put("ece", "ECE");
@@ -49,6 +51,25 @@ public class DemoDataSeeder implements CommandLineRunner {
         Map<String, List<Subject>> subjectsByDepartment = seedSubjects(departments, yearSubjectNames);
         seedUsersAndFaculty(departments, subjectsByDepartment);
         enforceSingleHodPerDepartment(departments);
+    }
+
+    private void seedAdminUser() {
+        String adminUsername = "admin123";
+        if (userRepository.findByUsername(adminUsername).isPresent()) {
+            return;
+        }
+
+        User admin = new User();
+        admin.setUsername(adminUsername);
+        admin.setPassword("admin@123");
+        admin.setRole(Role.ADMIN);
+        admin.setDepartmentIds(new ArrayList<>());
+        admin.setSubjectIds(new ArrayList<>());
+        admin.setFullName("System Administrator");
+        admin.setEmail("admin@college.edu");
+        admin.setCreatedByUserId("system");
+        admin.setCreatedByRole("system");
+        userRepository.save(admin);
     }
 
     private Map<String, List<Subject>> seedSubjects(Map<String, String> departments,

@@ -1,4 +1,4 @@
-﻿package com.example.demo.service;
+package com.example.demo.service;
 
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
@@ -19,15 +19,18 @@ public class UserService {
 
     public User registerUser(User user) {
         if (user.getUsername() == null || user.getUsername().isBlank()) {
-            throw new RuntimeException("Username is required");
+            throw new IllegalArgumentException("Username is required");
         }
 
         if (user.getPassword() == null || user.getPassword().isBlank()) {
-            throw new RuntimeException("Password is required");
+            throw new IllegalArgumentException("Password is required");
+        }
+        if (user.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
         }
 
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new IllegalArgumentException("Username already exists");
         }
 
         if (user.getRole() == null) {
@@ -44,11 +47,15 @@ public class UserService {
     }
 
     public User loginUser(String username, String password) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username or Student ID is required");
+        }
+
+        User user = userRepository.findByUsernameOrStudentId(username.trim(), username.trim())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (!user.getPassword().equals(password)) {
-            throw new RuntimeException("Invalid password");
+            throw new IllegalArgumentException("Invalid password");
         }
 
         return user;
@@ -56,23 +63,23 @@ public class UserService {
 
     public User changePassword(String username, String currentPassword, String newPassword) {
         if (username == null || username.isBlank()) {
-            throw new RuntimeException("Username is required");
+            throw new IllegalArgumentException("Username is required");
         }
         if (currentPassword == null || currentPassword.isBlank()) {
-            throw new RuntimeException("Current password is required");
+            throw new IllegalArgumentException("Current password is required");
         }
         if (newPassword == null || newPassword.isBlank()) {
-            throw new RuntimeException("New password is required");
+            throw new IllegalArgumentException("New password is required");
         }
         if (newPassword.length() < 6) {
-            throw new RuntimeException("New password must be at least 6 characters");
+            throw new IllegalArgumentException("New password must be at least 6 characters");
         }
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (!user.getPassword().equals(currentPassword)) {
-            throw new RuntimeException("Current password is incorrect");
+            throw new IllegalArgumentException("Current password is incorrect");
         }
 
         user.setPassword(newPassword);
