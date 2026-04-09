@@ -2,6 +2,8 @@ package com.example.demo.model;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "student_replies")
 public class StudentReply {
@@ -20,6 +22,16 @@ public class StudentReply {
 
     private String createdAt;
     private Boolean isRead;
+
+    @PrePersist
+    public void applyDefaults() {
+        if (isRead == null) {
+            isRead = false;
+        }
+        if (createdAt == null || createdAt.isBlank()) {
+            createdAt = Instant.now().toString();
+        }
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
