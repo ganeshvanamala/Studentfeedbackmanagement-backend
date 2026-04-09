@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-@Entity
+@Entity //Ensures this class is mapped to a database table
 @Table(name = "form")
 public class Form {
 
