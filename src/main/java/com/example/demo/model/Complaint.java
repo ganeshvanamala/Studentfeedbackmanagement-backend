@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -34,6 +35,26 @@ public class Complaint {
     private String targetDepartmentId;
     private String targetHodUsername;
     private String targetFacultyUsername;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subjectId", referencedColumnName = "id", insertable = false, updatable = false)
+    private Subject subject;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submittedBy", referencedColumnName = "username", insertable = false, updatable = false)
+    private User submittedByUser;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "targetHodUsername", referencedColumnName = "username", insertable = false, updatable = false)
+    private User targetHodUser;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "targetFacultyUsername", referencedColumnName = "username", insertable = false, updatable = false)
+    private User targetFacultyUser;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -97,4 +118,16 @@ public class Complaint {
 
     public String getTargetFacultyUsername() { return targetFacultyUsername; }
     public void setTargetFacultyUsername(String targetFacultyUsername) { this.targetFacultyUsername = targetFacultyUsername; }
+
+    public Subject getSubject() { return subject; }
+    public void setSubject(Subject subject) { this.subject = subject; }
+
+    public User getSubmittedByUser() { return submittedByUser; }
+    public void setSubmittedByUser(User submittedByUser) { this.submittedByUser = submittedByUser; }
+
+    public User getTargetHodUser() { return targetHodUser; }
+    public void setTargetHodUser(User targetHodUser) { this.targetHodUser = targetHodUser; }
+
+    public User getTargetFacultyUser() { return targetFacultyUser; }
+    public void setTargetFacultyUser(User targetFacultyUser) { this.targetFacultyUser = targetFacultyUser; }
 }

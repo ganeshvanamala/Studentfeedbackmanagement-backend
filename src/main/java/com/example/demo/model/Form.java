@@ -6,10 +6,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import java.util.ArrayList;
@@ -64,6 +68,24 @@ public class Form {
     @Column(name = "responses_json", columnDefinition = "TEXT")
     private String responsesJson;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "createdByUserId", referencedColumnName = "username", insertable = false, updatable = false)
+    private User createdByUser;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "targetSubjectId", referencedColumnName = "id", insertable = false, updatable = false)
+    private Subject targetSubject;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "form", fetch = FetchType.LAZY)
+    private List<Question> questionsList = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "form", fetch = FetchType.LAZY)
+    private List<Response> submittedResponses = new ArrayList<>();
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -105,6 +127,18 @@ public class Form {
 
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public User getCreatedByUser() { return createdByUser; }
+    public void setCreatedByUser(User createdByUser) { this.createdByUser = createdByUser; }
+
+    public Subject getTargetSubject() { return targetSubject; }
+    public void setTargetSubject(Subject targetSubject) { this.targetSubject = targetSubject; }
+
+    public List<Question> getQuestionsList() { return questionsList == null ? new ArrayList<>() : questionsList; }
+    public void setQuestionsList(List<Question> questionsList) { this.questionsList = questionsList == null ? new ArrayList<>() : questionsList; }
+
+    public List<Response> getSubmittedResponses() { return submittedResponses == null ? new ArrayList<>() : submittedResponses; }
+    public void setSubmittedResponses(List<Response> submittedResponses) { this.submittedResponses = submittedResponses == null ? new ArrayList<>() : submittedResponses; }
 
     public List<String> getDepartmentIds() {
         return departmentIds == null ? new ArrayList<>() : departmentIds;

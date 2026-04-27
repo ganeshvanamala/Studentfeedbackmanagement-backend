@@ -25,6 +25,11 @@ public class Faculty {
     private String departmentId;
 
     @JsonIgnore
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employeeId", referencedColumnName = "employeeId", insertable = false, updatable = false)
+    private User user;
+
+    @JsonIgnore
     @Lob
     @Column(columnDefinition = "TEXT")
     private String teachingJson;
@@ -43,6 +48,9 @@ public class Faculty {
 
     public String getDepartmentId() { return departmentId; }
     public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 
     public List<Map<String, Object>> getTeaching() {
         if (teachingJson == null || teachingJson.isBlank()) return new ArrayList<>();

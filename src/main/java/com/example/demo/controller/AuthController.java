@@ -1,8 +1,10 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AuthResponse;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.AuthTokenService;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.OtpService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -12,6 +14,7 @@ import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -31,14 +34,21 @@ public class AuthController {
     private final UserRepository userRepository;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final AuthTokenService authTokenService;
 
     @Value("${google.client.id:}")
     private String googleClientId;
 
-    public AuthController(UserRepository userRepository, OtpService otpService, EmailService emailService) {
+    public AuthController(
+            UserRepository userRepository,
+            OtpService otpService,
+            EmailService emailService,
+            AuthTokenService authTokenService
+    ) {
         this.userRepository = userRepository;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.authTokenService = authTokenService;
     }
 
     @PostMapping("/forgot-password")
@@ -134,7 +144,7 @@ public class AuthController {
 
             Optional<User> existing = userRepository.findByUsernameIgnoreCase(email);
             if (existing.isPresent()) {
-                return ResponseEntity.ok(existing.get());
+                return ResponseEntity.ok(buildAuthResponse(existing.get()));
             }
 
             User user = new User();
@@ -147,17 +157,20 @@ public class AuthController {
             user.setSubjectIds(new ArrayList<>());
 
             User saved = userRepository.save(user);
-            return ResponseEntity.ok(saved);
+            return ResponseEntity.ok(buildAuthResponse(saved));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Invalid Google token"));
         }
     }
 
     @PostMapping({"/google-complete-profile", "/complete-profile"})
-    public ResponseEntity<?> completeGoogleProfile(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> completeGoogleProfile(@RequestBody Map<String, String> request, Authentication authentication) {
         String email = normalize(request.get("email"));
         String username = normalize(request.get("username"));
-        String userIdentifier = !email.isBlank() ? email : username;
+        String authenticatedUsername = authentication == null ? "" : normalize(authentication.getName());
+        String userIdentifier = !authenticatedUsername.isBlank()
+                ? authenticatedUsername
+                : (!email.isBlank() ? email : username);
         String fullName = request.getOrDefault("fullName", "").trim();
         String studentId = request.getOrDefault("studentId", "").trim();
         String departmentId = normalize(request.get("departmentId"));
@@ -280,6 +293,11 @@ public class AuthController {
 
         User saved = userRepository.save(user);
         return ResponseEntity.ok(saved);
+    }
+
+    private AuthResponse buildAuthResponse(User user) {
+        AuthTokenService.IssuedToken issuedToken = authTokenService.issueToken(user);
+        return new AuthResponse(user, issuedToken.token(), issuedToken.expiresAt());
     }
 
     private Role parseRole(String roleInput) {

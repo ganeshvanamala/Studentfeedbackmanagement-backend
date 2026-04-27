@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -33,6 +34,11 @@ public class StudentReply {
         }
     }
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "targetUser", referencedColumnName = "username", insertable = false, updatable = false)
+    private User targetUserAccount;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -56,4 +62,7 @@ public class StudentReply {
 
     public Boolean getIsRead() { return isRead; }
     public void setIsRead(Boolean isRead) { this.isRead = isRead; }
+
+    public User getTargetUserAccount() { return targetUserAccount; }
+    public void setTargetUserAccount(User targetUserAccount) { this.targetUserAccount = targetUserAccount; }
 }

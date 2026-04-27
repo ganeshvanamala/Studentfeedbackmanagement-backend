@@ -15,9 +15,17 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 public class AuthTokenFilter extends OncePerRequestFilter {
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+            "/api/users/login",
+            "/api/users/register",
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
+            "/api/auth/google-login"
+    );
 
     private final AuthTokenService authTokenService;
 
@@ -27,15 +35,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // Security is configured open for this project; skip this filter for all requests.
-        return true;
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+            return true;
+        }
+        String path = request.getServletPath();
+        return PUBLIC_PATHS.contains(path);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || authHeader.isBlank()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        if (!authHeader.startsWith("Bearer ")) {
             writeUnauthorized(response, "Missing or invalid Authorization header");
             return;
         }
@@ -55,7 +70,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 List.of(new SimpleGrantedAuthority(authority))
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        filterChain.doFilter(request, response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     private void writeUnauthorized(HttpServletResponse response, String message) throws IOException {

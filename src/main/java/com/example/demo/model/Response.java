@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,4 +28,19 @@ public class Response {
     private String dept;
     private String subjectId;
     private String faculty;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "formId", referencedColumnName = "id", insertable = false, updatable = false)
+    private Form form;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "submittedBy", referencedColumnName = "username", insertable = false, updatable = false)
+    private User submittedByUser;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subjectId", referencedColumnName = "id", insertable = false, updatable = false)
+    private Subject subject;
 }
